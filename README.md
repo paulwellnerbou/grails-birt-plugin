@@ -36,12 +36,30 @@ to initialize the BIRT engine. If so, please contact me, open an issue or create
 
 ## Configuration
 
-The location of the reports can be configures in your `application.groovy` with
+The location of the reports can be configured in your `application.groovy` with
 
 ```
 birt {
-    reportHome = "Reports"
-    imageUrl = "images/report"
+    reportHome = "classpath:Reports"
+    useGrailsDatasource = false
+    generateAbsoluteBaseURL = false
+    baseUrl = ...
+    imageUrl = ...
+}
+```
+
+This are the default values. Your reports are found in the application's classpath if they are packaged correctly as
+resources (this is `src/main/resources` by convention).
+
+I don't really know what the other configuration options are exactly doing, the source code was copied without modifying the
+logic from [Eyck's original sources](https://github.com/eyck/grails-birt-report/blob/master/grails-app/services/com/itjw/grails/birt/BirtReportService.groovy).
+Please consider reading [the source](src/main/groovy/com/itjw/grails/birt/BirtReportService.groovy) to find out more. If you found out, please tell me, so I can update the documentation.
+
+If you want to use reports from filesystem, you can use the `file:` prefix:
+
+```
+birt {
+    reportHome = "file:path/to/your/reports"
 }
 ```
 

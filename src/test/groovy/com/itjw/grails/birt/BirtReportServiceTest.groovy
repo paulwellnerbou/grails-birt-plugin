@@ -1,5 +1,9 @@
 package com.itjw.grails.birt
 
+import grails.config.Config
+import grails.test.mixin.TestMixin
+import grails.test.mixin.support.GrailsUnitTestMixin
+import org.grails.config.PropertySourcesConfig
 import org.grails.io.support.ClassPathResource
 import org.grails.io.support.Resource
 import spock.lang.Specification
@@ -7,15 +11,23 @@ import spock.lang.Specification
 /**
  * @author Paul Wellner Bou <paul@wellnerbou.de>
  */
+@TestMixin(GrailsUnitTestMixin)
 class BirtReportServiceTest extends Specification {
-    def setup() {
+    
+    def "assure test context is up"() {
+        when:
+        def ctx = applicationContext
+        
+        then:
+        ctx != null
     }
     
     def "test report rendering with classpath"() {
         given:
         BirtReportService birtReportService = new BirtReportService(null)
-        birtReportService.reportHome = "Reports"
-        birtReportService.initEngine("", 100)
+        birtReportService.applicationContext = applicationContext
+        birtReportService.reportHome = "classpath:Reports"
+        birtReportService.initEngine("", new PropertySourcesConfig())
         def reportName = "new_report"
         def targetFileName = "./build/new_report_from_classpath.pdf"
         def options = birtReportService.getRenderOption(null, 'pdf')
@@ -23,7 +35,7 @@ class BirtReportServiceTest extends Specification {
         
         when:
         birtReportService.run(reportName, params, targetFileName)
-		def result = birtReportService.render(targetFileName, params, options)
+        def result = birtReportService.render(targetFileName, params, options)
         
         then:
         result != null
@@ -38,10 +50,11 @@ class BirtReportServiceTest extends Specification {
     def "test get input stream from classpath file"() {
         given:
         BirtReportService birtReportService = new BirtReportService(null)
-        birtReportService.reportHome = "Reports"
+        birtReportService.applicationContext = applicationContext
+        birtReportService.reportHome = "classpath:Reports"
         
         when:
-        InputStream inputStream = birtReportService.getInputStreamForClasspathResource("report")
+        InputStream inputStream = birtReportService.getInputStreamForResource("report")
         
         then:
         inputStream != null
@@ -51,16 +64,17 @@ class BirtReportServiceTest extends Specification {
     def "test report rendering with path to file on local filesystem"() {
         given:
         BirtReportService birtReportService = new BirtReportService(null)
-        birtReportService.reportHome = "src/test/resources/Reports"
-        birtReportService.initEngine("", 100)
+        birtReportService.applicationContext = applicationContext
+        birtReportService.reportHome = "file:src/test/resources/Reports"
+        birtReportService.initEngine("", new PropertySourcesConfig())
         def reportName = "new_report"
         def targetFileName = "./build/new_report.pdf"
         def options = birtReportService.getRenderOption(null, 'pdf')
         def params = [:]
         
         when:
-        birtReportService.run(reportName, null, params, targetFileName)
-		def result = birtReportService.render(targetFileName, params, options)
+        birtReportService.run(reportName, params, targetFileName)
+        def result = birtReportService.render(targetFileName, params, options)
         
         then:
         result != null
@@ -75,6 +89,7 @@ class BirtReportServiceTest extends Specification {
     def "test createCompleteReportFilename"() {
         given:
         BirtReportService birtReportService = new BirtReportService(null)
+        birtReportService.applicationContext = applicationContext
         birtReportService.reportHome = "Reports"
         
         when:
@@ -84,7 +99,7 @@ class BirtReportServiceTest extends Specification {
         reportHome == "Reports/reportName.rptdesign"
     }
     
-    def "test detectReportHome default classpath location"() {
+    def "test detectReportHome default location no nullpointer"() {
         given:
         BirtReportService birtReportService = new BirtReportService(null)
         
@@ -92,17 +107,76 @@ class BirtReportServiceTest extends Specification {
         def reportHome = birtReportService.detectReportHome(null)
         
         then:
-        reportHome == "Reports"
+        reportHome == "classpath:Reports"
+    }
+    
+    def "test detectReportHome default location no nullpointer without birt config"() {
+        given:
+        BirtReportService birtReportService = new BirtReportService(null)
+        def config = new PropertySourcesConfig()
+        
+        when:
+        def reportHome = birtReportService.detectReportHome(config)
+        
+        then:
+        reportHome == "classpath:Reports"
+    }
+    
+    def "test detectReportHome default location no nullpointer with birt config"() {
+        given:
+        BirtReportService birtReportService = new BirtReportService(null)
+        Config config = new PropertySourcesConfig()
+        config.birt.whatever = "string"
+        
+        when:
+        def reportHome = birtReportService.detectReportHome(config)
+        
+        then:
+        reportHome == "classpath:Reports"
+    }
+    
+    def "test detectReportHome with location config and with birt config"() {
+        given:
+        BirtReportService birtReportService = new BirtReportService(null)
+        Config config = new PropertySourcesConfig()
+        config.birt.reportHome = "reportHome"
+        
+        when:
+        def reportHome = birtReportService.detectReportHome(config)
+        
+        then:
+        reportHome == "reportHome"
     }
     
     def "test get resource from classpath"() {
-        given:
-        def fn = "report.rptdesign"
-        
         when:
         Resource resource = new ClassPathResource("Reports/report.rptdesign");
         InputStream inputStream = resource.inputStream
-
+        
+        then:
+        inputStream != null
+        inputStream.text == "File in default report location\n"
+    }
+    
+    def "test get classpath resource input stream with spring's applicationContext"() {
+        given:
+        def fn = "classpath:Reports/report.rptdesign"
+        
+        when:
+        InputStream inputStream = applicationContext.getResource(fn).inputStream
+        
+        then:
+        inputStream != null
+        inputStream.text == "File in default report location\n"
+    }
+    
+    def "test get file input stream with spring's applicationContext"() {
+        given:
+        def fn = "file:src/test/resources/Reports/report.rptdesign"
+        
+        when:
+        InputStream inputStream = applicationContext.getResource(fn).inputStream
+        
         then:
         inputStream != null
         inputStream.text == "File in default report location\n"

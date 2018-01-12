@@ -7,12 +7,12 @@ class BirtGrailsPlugin extends Plugin {
     def grailsVersion = "3.2.11 > *"
 	def author = "Paul Wellner Bou"
 	def authorEmail = "paul@wellnerbou.de"
-	def title = "Birt Reporting Plugin"
-	def description = 'Makes it easy to integrate the Birt reporting engine (runtime component) into your Grails application.'
+	def title = "BIRT Reporting Plugin"
+	def description = 'Makes it easy to integrate the BIRT reporting engine (runtime component) into your Grails application.'
 	def documentation = "https://github.com/paulwellnerbou/grails-birt-plugin"
 
 	def license = 'APACHE 2'
-	def issueManagement = [system: 'Github', url: 'https://github.com/paulwellnerbou/grails-birt-plugin/issues']
+	def issueManagement = [system: 'Github Issues', url: 'https://github.com/paulwellnerbou/grails-birt-plugin/issues']
 	def scm = [url: 'https://github.com/paulwellnerbou/grails-birt-plugin']
 
 	def pluginExcludes = [

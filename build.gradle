@@ -5,19 +5,21 @@ buildscript {
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.14.2"
     }
+}
+
+plugins {
+    id 'net.researchgate.release' version '2.6.0'
 }
 
 version "4.3.0.4-SNAPSHOT"
 group "org.grails.plugins"
 
-apply plugin:"eclipse"
-apply plugin:"idea"
-apply plugin:"org.grails.grails-plugin"
-apply plugin:"org.grails.grails-plugin-publish"
-apply plugin:"org.grails.grails-gsp"
-apply plugin:"asset-pipeline"
+apply plugin: "eclipse"
+apply plugin: "idea"
+apply plugin: "org.grails.grails-plugin"
+apply plugin: "org.grails.grails-plugin-publish"
+apply plugin: "org.grails.grails-gsp"
 
 repositories {
     mavenLocal()
@@ -38,6 +40,10 @@ dependencies {
     console "org.grails:grails-console"
     compile 'org.eclipse.birt.runtime:org.eclipse.birt.runtime:4.3.0a'
     
+    // necessary to prevent Error
+    // Caused by: java.lang.NoSuchMethodError: org.mozilla.javascript.Parser.parse(Ljava/lang/String;Ljava/lang/String;I)Lorg/mozilla/javascript/ScriptOrFnNode;
+    compile group: 'rhino', name: 'js', version: '1.7R1'
+    
     profile "org.grails.profiles:web-plugin"
     provided "org.grails:grails-plugin-services"
     provided "org.grails:grails-plugin-domain-class"
@@ -55,18 +61,27 @@ bootRun {
 
 // enable if you wish to package this plugin as a standalone application
 bootRepackage.enabled = false
+
+// user and key configuration for bintray deployment:
+// ./gradlew bintrayUpload -PpublishUser=<USER> -PpublishKey=<KEY>
+if (!project.hasProperty("publishUser")) {
+    ext.publishUser = ""
+}
+if (!project.hasProperty("publishKey")) {
+    ext.publishKey = ""
+}
+
 grailsPublish {
-    user = 'user'
-    key = 'key'
-    githubSlug = 'foo/bar'
+    user = "$publishUser"
+    key = "$publishKey"
+    githubSlug = 'paulwellnerbou/grails-birt-plugin'
+    repo = 'maven'
+    userOrg = 'paulwellnerbou'
     license {
         name = 'Apache-2.0'
     }
-    title = "BIRT "
-    desc = "Full plugin description"
-    developers = [paulwellnerbou:"Paul Wellner Bou"]
+    title = "BIRT Reporting Plugin"
+    desc = "Makes it easy to integrate the BIRT reporting engine (runtime component) into your Grails application."
+    developers = [paulwellnerbou: "Paul Wellner Bou"]
 }
 
-assets {
-    packagePlugin = true
-}

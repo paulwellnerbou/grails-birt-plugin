@@ -1,5 +1,6 @@
 package com.itjw.grails.birt
 
+import grails.config.Config
 import grails.core.GrailsApplication
 import grails.util.Environment
 import org.apache.log4j.Logger
@@ -9,8 +10,6 @@ import org.eclipse.birt.core.framework.PlatformFileContext
 import org.eclipse.birt.data.engine.api.DataEngine
 import org.eclipse.birt.report.engine.api.*
 import org.eclipse.birt.report.model.api.elements.DesignChoiceConstants
-import org.grails.io.support.ClassPathResource
-import org.grails.io.support.Resource
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
@@ -27,6 +26,8 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
 
     private static final String REPORT_EXT = ".rptdesign"
     private static final String SUPPORTED_IMAGE_FORMATS = "PNG;GIF;JPG;BMP"
+    public static final String DEFAULT_REPORT_HOME = "classpath:Reports"
+    public static final int DEFAULT_CACHE_SIZE = 100
     
     private boolean svgEnabled = false
     static transactional = false
@@ -35,17 +36,17 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
     GrailsApplication grailsApplication
 
     def dataSource
-    def useGrailsDatasource
+    boolean useGrailsDatasource
     // where are the reports located
-    def reportHome = ""
+    String reportHome = ""
     // at which URL are the reports generated
-    def baseURL
+    String baseURL
     // if the generated base url should be absolute
-    def generateAbsoluteBaseURL = false
+    boolean generateAbsoluteBaseURL = false
     // at which URL are the images accessible
-    def baseImageURL
+    String baseImageURL
     // what is the image dir on disc
-    def imageDir
+    String imageDir
 
     def defaultFormat = "inline"
     
@@ -59,42 +60,53 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
             LOG.error "Could not derive servlet context, report generation disabled"
             return
         }
-        def birtConfig = grailsApplication.config
-        reportHome = detectReportHome(birtConfig.birt)
+        
+        Config config = grailsApplication.config
+        
+        reportHome = detectReportHome(config)
         LOG.info "reportHome is ${reportHome}"
-        if(birtConfig.useGrailsDatasource)
+        
+        if(config.birt?.useGrailsDatasource) {
             useGrailsDatasource = true
+        }
         LOG.info "${useGrailsDatasource?'':'not '}using grails data source"
-        if (birtConfig.generateAbsoluteBaseURL)
+        
+        if (config.birt?.generateAbsoluteBaseURL) {
             generateAbsoluteBaseURL = true
-        if (birtConfig.baseUrl) {
-            baseURL = birtConfig.baseUrl
+        }
+        if (config.birt?.baseUrl) {
+            baseURL = config.birt.baseUrl
             LOG.info "baseURL is ${baseURL}"
         } else {
             LOG.info "generated baseURL will ${generateAbsoluteBaseURL?'':'not '}be absolute"
         }
-        baseImageURL = sc.contextPath + "/images/" + "rpt-img"
-        imageDir = sc.getRealPath("/images/" + "rpt")
-        if (birtConfig.imageUrl) {
-            if (birtConfig.imageUrl[0] == '/' || birtConfig.imageUrl[1] == ':'){
-                baseImageURL = sc.contextPath + birtConfig.imageUrl
-                imageDir = sc.getRealPath(birtConfig.imageUrl)
-            } else {
-                baseImageURL = sc.contextPath + "/" + birtConfig.imageUrl
-                imageDir = sc.getRealPath("/" + birtConfig.imageUrl)
-            }
-        }
+    
+        detectImageUrls(sc, config)
         def imgDir = new File(imageDir)
+        LOG.info "baseImageUrl is ${baseImageURL} and points to ${imageDir}"
         if (!imgDir.exists() && !imgDir.mkdirs()) {
-            LOG.error "Could not create report image directory, report generation disabled"
+            LOG.error "Could not create report image directory ${imgDir.absolutePath}, report generation disabled."
             return
         }
-        LOG.info "baseImageUrl is ${baseImageURL} and points to ${imageDir}"
     
-        initEngine(baseURL, birtConfig.cacheSize ?: 100)
+        initEngine(baseURL, config)
     }
     
-    protected void initEngine(String baseURL, Integer cacheSize) {
+    protected void detectImageUrls(ServletContext sc, Config config) {
+        baseImageURL = sc.contextPath + "/images/" + "rpt-img"
+        imageDir = sc.getRealPath("/images/" + "rpt")
+        if (config.birt?.imageUrl) {
+            if (config.birt.imageUrl[0] == '/' || config.birt.imageUrl[1] == ':') {
+                baseImageURL = sc.contextPath + config.birt.imageUrl
+                imageDir = sc.getRealPath(config..birtimageUrl as String)
+            } else {
+                baseImageURL = sc.contextPath + "/" + config.birt.imageUrl
+                imageDir = sc.getRealPath("/" + config.birt.imageUrl)
+            }
+        }
+    }
+    
+    protected void initEngine(String baseURL, Config config) {
         System.setProperty("RUN_UNDER_ECLIPSE", "false")
         HTMLServerImageHandler imageHandler = new HTMLServerImageHandler()
         // for file based output
@@ -106,6 +118,10 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
         // appContext[EngineContants.APPCONTEXT_CHART_RESOLUTION] = myvalue
         // Create the engineConfig for the report generator
         def engineConfig = new EngineConfig()
+        Integer cacheSize = DEFAULT_CACHE_SIZE
+        if(config != null && config.birt?.cacheSize) {
+            cacheSize = config.cacheSize
+        }
         engineConfig.appContext = [(DataEngine.MEMORY_BUFFER_SIZE): cacheSize]
         engineConfig.engineHome = ""
         engineConfig.platformContext = new PlatformFileContext(engineConfig)
@@ -114,14 +130,17 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
         BirtEngineFactory.init(engineConfig)
     }
     
-    public InputStream getInputStreamForClasspathResource(String reportName) {
-        String fn = "/" + createCompleteReportFilename(reportName)
-        Resource resource = new ClassPathResource(fn);
-        return resource.inputStream
+    public InputStream getInputStreamForResource(String reportName) {
+        String fn = createCompleteReportFilename(reportName)
+        return applicationContext.getResource(fn).inputStream
     }
     
-    protected String detectReportHome(birtConfig) {
-        return "Reports"
+    protected String detectReportHome(Config config) {
+        if(config != null && config.birt?.reportHome) {
+            return config.birt.reportHome
+        } else {
+            return DEFAULT_REPORT_HOME
+        }
     }
     
     /**
@@ -441,15 +460,16 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
         if (baseURL =~ /^\w+:\/\//) { // we have a complete URL
             options.baseURL = baseURL
         } else if(request != null) {
-            if(generateAbsoluteBaseURL){
+            if(generateAbsoluteBaseURL) {
                 // add the protocol/host/port part of the URL
                 options.baseURL = "${request.getScheme()}://${request.getServerName()}:${request.getServerPort()}"
                 // append application context path either as absolute path or as relative
                 options.baseURL += baseURL[0] == "/" ? baseURL : request.getContextPath() + "/" + baseURL
-            } else
+            } else {
                 options.baseURL = request.contextPath
+            }
         } else {
-            options.baseURL="/"
+            options.baseURL = "/"
         }
         options.actionHandler = new GrailsHTMLActionHandler(options.baseURL, format?:defaultFormat)
         options.outputFormat = format?:"html"
@@ -609,7 +629,7 @@ class BirtReportService implements InitializingBean, ApplicationContextAware {
      * @param reportDocumentName
      */
     def run(String reportName, parameters, String reportDocumentName, Locale locale = null) {
-        run(reportName, getInputStreamForClasspathResource(reportName), parameters, reportDocumentName, locale)
+        run(reportName, getInputStreamForResource(reportName), parameters, reportDocumentName, locale)
     }
 
     /**
