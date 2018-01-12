@@ -102,4 +102,6 @@ local Maven repository.
 
 # Release
 
-*TODO*
+```
+./gradlew clean assemble bintrayUpload -PpublishUser=<user> -PpublishKey=<key>
+```
