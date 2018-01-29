@@ -84,4 +84,3 @@ grailsPublish {
     desc = "Makes it easy to integrate the BIRT reporting engine (runtime component) into your Grails application."
     developers = [paulwellnerbou: "Paul Wellner Bou"]
 }
-

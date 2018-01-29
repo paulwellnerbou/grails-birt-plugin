@@ -5,7 +5,7 @@ Plugin for Grails 3.2+ offering BIRT functionality from legacy Grails 2 BIRT Plu
 --- 
 
 This plugin takes mainly [eyck's](https://github.com/eyck) code from his [BIRT Plugin for Grails 2](https://github.com/eyck/grails-birt-report),
-restructured so that it works with Grails 3 and works with Reports from classpath resources, not only from files.
+restructured so that it works with Grails 3 and works with reports from classpath resources, not only from files.
 
 As I am neither an expert for grails nor for BIRT, there may be way better methods to set up this Grails 3 plugin or
 to initialize the BIRT engine. If so, please contact me, open an issue or create a pull request.
@@ -18,9 +18,19 @@ to initialize the BIRT engine. If so, please contact me, open an issue or create
 
 1. Include the dependency in your `build.gradle` of your Grails 3 project:
 	```
-	compile 'org.grails.plugins:birt-report:4.3.0.4-SNAPSHOT'
+	repositories {
+		maven {
+			url  "https://dl.bintray.com/paulwellnerbou/maven" 
+		}
+	}
+	
+	...
+	
+	dependencies {
+		compile 'org.grails.plugins:birt-report:4.3.0.4'
+	}
 	```
-	As the artifact is not published in any public repositories, you will have to build it before (see below under *Test, build & install*).
+	
 2. Add `BirtReportService` to your beans in your `resources.groovy`:
 	```
 	birtReportService(BirtReportService, grailsApplication)
