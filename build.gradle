@@ -21,6 +21,9 @@ apply plugin: "org.grails.grails-plugin"
 apply plugin: "org.grails.grails-plugin-publish"
 apply plugin: "org.grails.grails-gsp"
 
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
 repositories {
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
@@ -40,13 +43,15 @@ dependencies {
     console "org.grails:grails-console"
     compile 'org.eclipse.birt.runtime:org.eclipse.birt.runtime:4.3.0a'
     
-    // necessary to prevent Error
+    // necessary to prevent following error:
     // Caused by: java.lang.NoSuchMethodError: org.mozilla.javascript.Parser.parse(Ljava/lang/String;Ljava/lang/String;I)Lorg/mozilla/javascript/ScriptOrFnNode;
     compile group: 'rhino', name: 'js', version: '1.7R1'
     
     profile "org.grails.profiles:web-plugin"
     provided "org.grails:grails-plugin-services"
     provided "org.grails:grails-plugin-domain-class"
+
+    testCompile "org.grails:grails-test-mixins:3.3.0"
     testCompile "org.grails:grails-plugin-testing"
 }
 
