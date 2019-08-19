@@ -1,6 +1,6 @@
 # grails-birt-plugin
 
-Plugin for Grails 3.2+ offering BIRT functionality from legacy Grails 2 BIRT Plugin (http://grails.org/plugin/birt-report)
+Plugin for Grails 4+ offering BIRT functionality from legacy Grails 2 BIRT Plugin (http://grails.org/plugin/birt-report)
 
 --- 
 
@@ -16,33 +16,35 @@ to initialize the BIRT engine. If so, please contact me, open an issue or create
 
 ## Setup
 
-1. Include the dependency in your `build.gradle` of your Grails 3 project:
-	```
-	repositories {
-		maven {
-			url  "https://dl.bintray.com/paulwellnerbou/maven" 
-		}
-	}
+1. Include the dependency in your `build.gradle` of your Grails 4 project:
+```
+repositories {
+    maven {
+        url  "https://dl.bintray.com/paulwellnerbou/maven" 
+    }
+}
+
+...
+
+dependencies {
+    compile 'org.grails.plugins:birt-report:4.4.0'
+}
+```
 	
-	...
-	
-	dependencies {
-		compile 'org.grails.plugins:birt-report:4.3.0.4'
-	}
-	```
+For Grails 3, use version `4.3.0.4`.
 	
 2. Add `BirtReportService` to your beans in your `resources.groovy`:
-	```
-	birtReportService(BirtReportService, grailsApplication)
-	```
+```
+birtReportService(BirtReportService, grailsApplication)
+```
 3. Use `BirtReportService` in your Controllers/Services, it will be automatically injected:
-	```
-	class MyController {
+```
+class MyController {
 
-		BirtReportService birtReportService
-		...
-	}
-	```
+    BirtReportService birtReportService
+    ...
+}
+```
 
 ## Configuration
 
@@ -80,25 +82,26 @@ Have a look at the unit test class `BirtReportServiceTest`, where a sample repor
 ### Create a PDF file
 
 ```groovy
-def params = [:]
-def reportName = "new_report" // .rptdesign is added automatically
-def targetFileName = "/path/to/target/file.pdf"
+def parameters = [:]
+def birtReportTmpFile = "anyTmpFileName"
+def reportName = "myReport" // .rptdesign is added automatically
 def options = birtReportService.getRenderOption(null, 'pdf')
-birtReportService.run(reportName, params, targetFileName) // params is a key-value structure containing params your report needs
-def result = birtReportService.render(targetFileName, params, options)
+birtReportService.run(reportName, parameters, birtReportTmpFile)
+def targetFileName = "/path/to/target/file.pdf"
+def result = birtReportService.render(targetFileName, parameters, options)
 new File(targetFileName).newOutputStream() << result.toByteArray()
 ```
 
 ### Use it in your servlet context to deliver a PDF as response
 
 ```groovy
-def params = [:]
-def reportName = "new_report" // .rptdesign is added automatically
-def targetFileName = "output.pdf"
+def parameters = [:]
+def birtReportTmpFile = "anyTmpFileName"
+def reportName = "myReport" // .rptdesign is added automatically
 def options = birtReportService.getRenderOption(request, 'pdf')
-birtReportService.run(reportName, params, fileName)
-def result = birtReportService.render(targetFileName, params, options)
-response.setHeader("Content-disposition", "attachment; filename=" + targetFileName)
+birtReportService.run(reportName, parameters, birtReportTmpFile)
+def result = birtReportService.render(targetFileName, parameters, options)
+response.setHeader("Content-disposition", "attachment; filename=report.pdf")
 response.contentType = 'application/pdf'
 response.outputStream << result.toByteArray()
 ```
