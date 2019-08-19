@@ -1,5 +1,5 @@
 package com.itjw.grails.birt;
-import org.apache.log4j.Logger;
+
 import org.eclipse.birt.core.exception.BirtException;
 import org.eclipse.birt.core.framework.Platform;
 import org.eclipse.birt.report.engine.api.EngineConfig;
@@ -7,10 +7,12 @@ import org.eclipse.birt.report.engine.api.IRenderOption;
 import org.eclipse.birt.report.engine.api.IReportEngine;
 import org.eclipse.birt.report.engine.api.IReportEngineFactory;
 import org.eclipse.birt.report.engine.api.RenderOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BirtEngineFactory {
 
-    private static Logger log = Logger.getLogger(BirtEngineFactory.class);
+    private static Logger log = LoggerFactory.getLogger(BirtEngineFactory.class);
 
     private static IReportEngineFactory factory;
     private static EngineConfig engineConfig;

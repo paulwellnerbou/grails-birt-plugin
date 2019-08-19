@@ -3,13 +3,14 @@ package com.itjw.grails.birt
 import grails.config.Config
 import grails.core.GrailsApplication
 import grails.util.Environment
-import org.apache.log4j.Logger
 import org.eclipse.birt.core.data.DataTypeUtil
 import org.eclipse.birt.core.exception.BirtException
 import org.eclipse.birt.core.framework.PlatformFileContext
 import org.eclipse.birt.data.engine.api.DataEngine
 import org.eclipse.birt.report.engine.api.*
 import org.eclipse.birt.report.model.api.elements.DesignChoiceConstants
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
@@ -22,7 +23,7 @@ import java.util.logging.Level
 
 class BirtReportService implements InitializingBean, ApplicationContextAware {
 
-    private static final Logger LOG = Logger.getLogger(BirtReportService)
+    private static Logger LOG = LoggerFactory.getLogger(BirtReportService.class);
 
     private static final String REPORT_EXT = ".rptdesign"
     private static final String SUPPORTED_IMAGE_FORMATS = "PNG;GIF;JPG;BMP"

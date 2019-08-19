@@ -1,8 +1,7 @@
 package com.itjw.grails.birt
 
 import grails.config.Config
-import grails.test.mixin.TestMixin
-import grails.test.mixin.support.GrailsUnitTestMixin
+import grails.testing.spring.AutowiredTest
 import org.grails.config.PropertySourcesConfig
 import org.grails.io.support.ClassPathResource
 import org.grails.io.support.Resource
@@ -11,8 +10,7 @@ import spock.lang.Specification
 /**
  * @author Paul Wellner Bou <paul@wellnerbou.de>
  */
-@TestMixin(GrailsUnitTestMixin)
-class BirtReportServiceTest extends Specification {
+class BirtReportServiceTest extends Specification implements AutowiredTest {
     
     def "assure test context is up"() {
         when:
@@ -29,13 +27,14 @@ class BirtReportServiceTest extends Specification {
         birtReportService.reportHome = "classpath:Reports"
         birtReportService.initEngine("", new PropertySourcesConfig())
         def reportName = "new_report"
+        def tmpFileName = File.createTempFile("tmp_report", ".birt", new File("./build")).getAbsolutePath()
         def targetFileName = "./build/new_report_from_classpath.pdf"
         def options = birtReportService.getRenderOption(null, 'pdf')
         def params = [:]
         
         when:
-        birtReportService.run(reportName, params, targetFileName)
-        def result = birtReportService.render(targetFileName, params, options)
+        birtReportService.run(reportName, params, tmpFileName)
+        def result = birtReportService.render(tmpFileName, params, options)
         
         then:
         result != null
@@ -68,13 +67,14 @@ class BirtReportServiceTest extends Specification {
         birtReportService.reportHome = "file:src/test/resources/Reports"
         birtReportService.initEngine("", new PropertySourcesConfig())
         def reportName = "new_report"
+        def tmpFileName = File.createTempFile("tmp_report", ".birt", new File("./build")).getAbsolutePath()
         def targetFileName = "./build/new_report.pdf"
         def options = birtReportService.getRenderOption(null, 'pdf')
         def params = [:]
         
         when:
-        birtReportService.run(reportName, params, targetFileName)
-        def result = birtReportService.render(targetFileName, params, options)
+        birtReportService.run(reportName, params, tmpFileName)
+        def result = birtReportService.render(tmpFileName, params, options)
         
         then:
         result != null
