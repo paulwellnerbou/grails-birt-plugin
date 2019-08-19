@@ -47,6 +47,8 @@ allprojects {
     tasks.withType(Javadoc).all { enabled = false }
 }
 
+afterReleaseBuild.dependsOn publish
+
 // user and key configuration for bintray deployment:
 // ./gradlew bintrayUpload -PpublishUser=<USER> -PpublishKey=<KEY>
 if (!project.hasProperty("publishUser")) {
