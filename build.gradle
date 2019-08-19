@@ -48,6 +48,7 @@ allprojects {
 }
 
 afterReleaseBuild.dependsOn publish
+afterReleaseBuild.dependsOn bintrayPublish
 
 // user and key configuration for bintray deployment:
 // ./gradlew bintrayUpload -PpublishUser=<USER> -PpublishKey=<KEY>

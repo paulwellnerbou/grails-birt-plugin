@@ -116,5 +116,5 @@ local Maven repository.
 # Release
 
 ```
-./gradlew clean assemble bintrayUpload -PpublishUser=<user> -PpublishKey=<key>
+./gradlew release -Prelease.useAutomaticVersion=true -PpublishUser=<user> -PpublishKey=<key>
 ```
