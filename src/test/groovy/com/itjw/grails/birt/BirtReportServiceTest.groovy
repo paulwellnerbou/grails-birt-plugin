@@ -57,7 +57,7 @@ class BirtReportServiceTest extends Specification implements AutowiredTest {
 
         then:
         inputStream != null
-        inputStream.text == "File in default report location\n"
+        inputStream.text == "File in default report location"
     }
 
     def "test report rendering with path to file on local filesystem"() {
@@ -155,7 +155,7 @@ class BirtReportServiceTest extends Specification implements AutowiredTest {
 
         then:
         inputStream != null
-        inputStream.text == "File in default report location\n"
+        inputStream.text == "File in default report location"
     }
 
     def "test get classpath resource input stream with spring's applicationContext"() {
@@ -167,7 +167,7 @@ class BirtReportServiceTest extends Specification implements AutowiredTest {
 
         then:
         inputStream != null
-        inputStream.text == "File in default report location\n"
+        inputStream.text == "File in default report location"
     }
 
     def "test get file input stream with spring's applicationContext"() {
@@ -179,6 +179,6 @@ class BirtReportServiceTest extends Specification implements AutowiredTest {
 
         then:
         inputStream != null
-        inputStream.text == "File in default report location\n"
+        inputStream.text == "File in default report location"
     }
 }

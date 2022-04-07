@@ -30,7 +30,7 @@ dependencies {
     compile 'org.grails.plugins:birt-report:4.4.0'
 }
 ```
-	
+
 For Grails 3, use version `4.3.0.4`.
 	
 2. Add `BirtReportService` to your beans in your `resources.groovy`:
