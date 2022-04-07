@@ -47,28 +47,26 @@ allprojects {
     tasks.withType(Javadoc).all { enabled = false }
 }
 
-afterReleaseBuild.dependsOn publish
-afterReleaseBuild.dependsOn bintrayPublish
-
-// user and key configuration for bintray deployment:
-// ./gradlew bintrayUpload -PpublishUser=<USER> -PpublishKey=<KEY>
-if (!project.hasProperty("publishUser")) {
+if (!project.hasProperty("s3AccessKey")) {
     ext.publishUser = ""
 }
-if (!project.hasProperty("publishKey")) {
+if (!project.hasProperty("s3SecretKey")) {
     ext.publishKey = ""
 }
 
-grailsPublish {
-    user = "$publishUser"
-    key = "$publishKey"
-    githubSlug = 'paulwellnerbou/grails-birt-plugin'
-    repo = 'maven'
-    userOrg = 'paulwellnerbou'
-    license {
-        name = 'Apache-2.0'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
     }
-    title = "BIRT Reporting Plugin"
-    desc = "Makes it easy to integrate the BIRT reporting engine (runtime component) into your Grails application."
-    developers = [paulwellnerbou: "Paul Wellner Bou"]
+    repositories {
+        maven {
+            url "s3://tesolva-maven-repo/"
+            credentials(AwsCredentials) {
+                accessKey project.findProperty("s3AccessKey") ?: ""
+                secretKey project.findProperty("s3SecretKey") ?: ""
+            }
+        }
+    }
 }
